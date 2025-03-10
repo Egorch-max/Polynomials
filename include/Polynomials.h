@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 template <class T>
 class list {
@@ -413,7 +414,7 @@ polynomial&
 polynomial::operator*=(const double& num) {
 	auto it = polynom.begin();
 	while (it != polynom.end()) {
-		it->data.multiplier = round(it->data.multiplier * num * 1e10) / 1e10;
+		it->data.multiplier = std::round(it->data.multiplier * num * 1e10) / 1e10;
 		++it;
 	}
 	return (*this);
