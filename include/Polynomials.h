@@ -12,7 +12,7 @@ public:
 	public:
 		T data;
 		node* next;
-		node(T value = 0, node* next_ = NULL) : next(next_), data(value) {}
+		node(T value = T(), node* next_ = NULL) : next(next_), data(value) {}
 	};
 	node* first;
 	size_t size;
@@ -75,12 +75,12 @@ public:
 
 	node* get_first() { return first; }
 
-	iterator search(T& value) {
+	iterator search(const T& value) {
 		iterator it = begin();
 		while (it != end()) {
 			if (it->data == value)
 				break;
-			it++;
+			++it;
 		}
 		return it;
 	}
@@ -136,28 +136,42 @@ public:
 	public:							//degree - three-digit number
 		size_t degree;				//monomial degree in the range from 0 to 9 for each variable (x, y or z) 
 		double multiplier;			//coefficient in front of the monomial  
+		double coefficient;
 
 		monomial() : degree(0), multiplier(0) {}
 		monomial(size_t t_degree, double t_mult) : degree(t_degree), multiplier(t_mult) {}
 		monomial(const monomial& t_monom) : degree(t_monom.degree), multiplier(t_monom.multiplier) {}
 
+		int get_x_degree() const { return degree / 100; }
+		int get_y_degree() const { return (degree / 10) % 10; }
+		int get_z_degree() const { return degree % 10; }
+
 		monomial& operator*=(const monomial& m) {
-			//the digit of a three-digit number corresponds to the degree of one of the variables x,y,z
-			if (degree / 100 + m.degree / 100 > EXP || degree / 10 % 10 + m.degree / 10 % 10 > EXP \
-				|| degree % 10 + m.degree % 10 > EXP)
+			if (get_x_degree() + m.get_x_degree() > EXP ||
+				get_y_degree() + m.get_y_degree() > EXP ||
+				get_z_degree() + m.get_z_degree() > EXP)
 				throw "too big degree of monomial";
-			else {
-				multiplier *= m.multiplier;
-				degree += m.degree;
-				return (*this);
-			}
-		}
-		monomial operator*(const monomial& m) {
-			monomial tmp = (*this);
-			tmp *= m;
-			return tmp;
+
+			multiplier *= m.multiplier;
+			degree += m.degree;
+			return *this;
 		}
 
+		monomial operator*(const monomial& m) const {
+			monomial result = (*this);
+			result *= m;
+			return result;
+		}
+
+		monomial operator+(const monomial& m) const {
+			if (degree != m.degree)
+				throw std::runtime_error("Cannot add monomials with different degrees");
+
+			monomial result = *this;
+			result.multiplier += m.multiplier;
+			return result;
+		}
+	
 		bool operator==(const monomial& m) const {
 			//take into account the error of "double" type
 			return (abs(multiplier - m.multiplier) <= 1e-10 && degree == m.degree);
@@ -405,9 +419,9 @@ polynomial::operator+=(const polynomial& p)
 polynomial
 polynomial::operator+(const polynomial& p)
 {
-	polynomial tmp(*this);
-	tmp += p;
-	return tmp;
+	polynomial result = *this;
+	result += p; 
+	return result;
 }
 
 polynomial& 
